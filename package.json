@@ -1,0 +1,19 @@
+{
+  "name": "letters-chat",
+  "version": "1.0.0",
+  "description": "Letters chat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goo-gy/Letters-Chat.git"
+  },
+  "author": "googy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/goo-gy/Letters-Chat/issues"
+  },
+  "homepage": "https://github.com/goo-gy/Letters-Chat#readme"
+}
