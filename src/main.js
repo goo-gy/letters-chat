@@ -24,21 +24,21 @@ const io = SocketIO(httpServer, {
   },
 });
 
-const rooms = {};
+const rooms = new Map();
 
 io.on(event.connection, (socket) => {
   socket['userName'] = '???';
+
   socket.on(event.joinRoom, ({ userName, roomName }, done) => {
-    socket['userName'] = userName;
     const time = dayjs().format(timeFormat);
+    socket['userName'] = userName;
     socket.join(roomName);
-    if (rooms[roomName]) {
-      rooms[roomName] = [...rooms[roomName], userName];
-    } else {
-      rooms[roomName] = [userName];
-    }
+
+    if (rooms.get(roomName)) rooms.get(roomName).add(userName);
+    else rooms.set(roomName, new Set([userName]));
+
     socket.to(roomName).emit(event.joinRoom, { userName, time });
-    done({ people: rooms[roomName], userName, time });
+    done({ people: rooms.get(roomName), userName, time });
   });
 
   socket.on(event.msg, ({ roomName, msg }, done) => {
@@ -55,30 +55,24 @@ io.on(event.connection, (socket) => {
 
   socket.on(event.leaveRoom, ({ roomName }) => {
     const time = dayjs().format(timeFormat);
-    if (rooms[roomName]) {
-      rooms[roomName] = [...rooms[roomName], socket['userName']];
-      rooms[roomName] = rooms[roomName].filter(
-        (name) => name !== socket['userName']
-      );
-    }
+    socket.leave(roomName);
+    if (rooms.get(roomName)) rooms.get(roomName).delete(socket['userName']);
     socket
       .to(roomName)
       .emit(event.leaveRoom, { userName: socket['userName'], time });
   });
 
-  socket.on(event.disconnect, () => {
-    // const peopleCount = io.sockets.adapter.rooms.get('global')?.size;
-    // if (peopleCount) socket.to('global').emit(event.joinRoom, { peopleCount });
-  });
-
   socket.on(event.disconnecting, () => {
     const time = dayjs().format(timeFormat);
     socket.rooms.forEach((room) => {
+      if (rooms.get(room)) rooms.get(room).delete(socket['userName']);
       socket
         .to(room)
         .emit(event.leaveRoom, { userName: socket['userName'], time });
     });
   });
+
+  socket.on(event.disconnect, () => {});
 });
 
 const handleListen = () => console.log(`Listening on ${PORT}`);
