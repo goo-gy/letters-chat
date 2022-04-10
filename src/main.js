@@ -9,13 +9,15 @@ const timeFormat = 'YYYY-MM-DD hh:mm';
 const event = {
   connection: 'connection',
   disconnect: 'disconnect',
+  disconnecting: 'disconnecting',
   joinRoom: 'join_room',
+  leaveRoom: 'leave_room',
   msg: 'msg',
 };
 
 const app = express();
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer, {
+const io = SocketIO(httpServer, {
   cors: {
     origin: '*',
     credentials: true,
@@ -24,8 +26,10 @@ const wsServer = SocketIO(httpServer, {
 
 const rooms = {};
 
-wsServer.on(event.connection, (socket) => {
+io.on(event.connection, (socket) => {
+  socket['userName'] = '???';
   socket.on(event.joinRoom, ({ userName, roomName }, done) => {
+    socket['userName'] = userName;
     const time = dayjs().format(timeFormat);
     socket.join(roomName);
     if (rooms[roomName]) {
@@ -33,17 +37,15 @@ wsServer.on(event.connection, (socket) => {
     } else {
       rooms[roomName] = [userName];
     }
-    // const peopleCount = wsServer.sockets.adapter.rooms.get(roomName)?.size;
-    // TODO : check same host
     socket.to(roomName).emit(event.joinRoom, { userName, time });
     done({ people: rooms[roomName], userName, time });
   });
 
-  socket.on(event.msg, ({ userName, roomName, msg }, done) => {
+  socket.on(event.msg, ({ roomName, msg }, done) => {
     const time = dayjs().format(timeFormat);
     if (msg) {
       socket.to(roomName).emit(event.msg, {
-        userName,
+        userName: socket['userName'],
         msg,
         time,
       });
@@ -51,9 +53,31 @@ wsServer.on(event.connection, (socket) => {
     }
   });
 
+  socket.on(event.leaveRoom, ({ roomName }) => {
+    const time = dayjs().format(timeFormat);
+    if (rooms[roomName]) {
+      rooms[roomName] = [...rooms[roomName], socket['userName']];
+      rooms[roomName] = rooms[roomName].filter(
+        (name) => name !== socket['userName']
+      );
+    }
+    socket
+      .to(roomName)
+      .emit(event.leaveRoom, { userName: socket['userName'], time });
+  });
+
   socket.on(event.disconnect, () => {
-    const peopleCount = wsServer.sockets.adapter.rooms.get('global')?.size;
-    if (peopleCount) socket.to('global').emit(event.joinRoom, { peopleCount });
+    // const peopleCount = io.sockets.adapter.rooms.get('global')?.size;
+    // if (peopleCount) socket.to('global').emit(event.joinRoom, { peopleCount });
+  });
+
+  socket.on(event.disconnecting, () => {
+    const time = dayjs().format(timeFormat);
+    socket.rooms.forEach((room) => {
+      socket
+        .to(room)
+        .emit(event.leaveRoom, { userName: socket['userName'], time });
+    });
   });
 });
 
