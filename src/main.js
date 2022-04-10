@@ -1,7 +1,7 @@
-const express = require('express');
-const http = require('http');
-const SocketIO = require('socket.io');
-const dayjs = require('dayjs');
+import express from 'express';
+import http from 'http';
+import SocketIO from 'socket.io';
+import dayjs from 'dayjs';
 
 const PORT = 3001;
 const timeFormat = 'YYYY-MM-DD hh:mm';

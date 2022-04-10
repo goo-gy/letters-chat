@@ -4,7 +4,7 @@
   "description": "Letters chat",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/main.js",
+    "start": "nodemon",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -22,5 +22,11 @@
     "express": "^4.17.3",
     "nodemon": "^2.0.15",
     "socket.io": "^4.4.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-node": "^0.0.1-security",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-3": "^6.24.1"
   }
 }
