@@ -3,10 +3,15 @@ import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';
 import dayjs from 'dayjs';
 
+// local
+import { users, verifyToken } from './db/user';
+import { rooms, joinRoom, leaveRoom, getMembers, checkMember } from './db/room';
+
 const PORT = 3001;
 const timeFormat = 'YYYY-MM-DD hh:mm';
 
 const event = {
+  auth: 'auth',
   connection: 'connection',
   disconnect: 'disconnect',
   disconnecting: 'disconnecting',
@@ -27,51 +32,59 @@ instrument(io, {
   auth: false,
 });
 
-const rooms = new Map();
+io.on(event.connection, (socket, data) => {
+  socket.on(event.auth, ({ token }, done) => {
+    const user = verifyToken(token);
+    if (user.error) {
+      return;
+    }
+    socket['userId'] = user.id;
+    users.set(user.id, { ...user });
+    done();
+  });
 
-io.on(event.connection, (socket) => {
-  socket['userName'] = '???';
-
-  socket.on(event.joinRoom, ({ userName, roomName }, done) => {
+  socket.on(event.joinRoom, ({ roomName }, done) => {
     const time = dayjs().format(timeFormat);
-    socket['userName'] = userName;
+    const user = users.get(socket['userId']);
+    if (!user) {
+      return;
+    }
     socket.join(roomName);
-
-    if (rooms.get(roomName)) rooms.get(roomName).add(userName);
-    else rooms.set(roomName, new Set([userName]));
-
-    socket.to(roomName).emit(event.joinRoom, { userName, time });
-    done({ people: rooms.get(roomName), userName, time });
+    if (!checkMember({ roomName, user })) {
+      socket.to(roomName).emit(event.joinRoom, { user, time });
+    }
+    joinRoom({ roomName, user });
+    const people = getMembers({ roomName });
+    done({ people, user, time });
   });
 
   socket.on(event.msg, ({ roomName, msg }, done) => {
     const time = dayjs().format(timeFormat);
+    const user = users.get(socket['userId']);
     if (msg) {
       socket.to(roomName).emit(event.msg, {
-        userName: socket['userName'],
+        user,
         msg,
         time,
       });
-      done(time);
+      done({ user, time });
     }
   });
 
   socket.on(event.leaveRoom, ({ roomName }) => {
     const time = dayjs().format(timeFormat);
+    const user = users.get(socket['userId']);
     socket.leave(roomName);
-    if (rooms.get(roomName)) rooms.get(roomName).delete(socket['userName']);
-    socket
-      .to(roomName)
-      .emit(event.leaveRoom, { userName: socket['userName'], time });
+    leaveRoom({ roomName, user });
+    socket.to(roomName).emit(event.leaveRoom, { user, time });
   });
 
   socket.on(event.disconnecting, () => {
     const time = dayjs().format(timeFormat);
-    socket.rooms.forEach((room) => {
-      if (rooms.get(room)) rooms.get(room).delete(socket['userName']);
-      socket
-        .to(room)
-        .emit(event.leaveRoom, { userName: socket['userName'], time });
+    const user = users.get(socket['userId']);
+    socket.rooms.forEach((roomName) => {
+      leaveRoom({ roomName, user });
+      socket.to(roomName).emit(event.leaveRoom, { user, time });
     });
   });
 
