@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/goo-gy/Letters-Chat#readme",
   "dependencies": {
+    "@socket.io/admin-ui": "^0.2.0",
     "dayjs": "^1.11.0",
     "express": "^4.17.3",
     "nodemon": "^2.0.15",

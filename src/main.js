@@ -1,6 +1,6 @@
-import express from 'express';
-import http from 'http';
-import SocketIO from 'socket.io';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { instrument } from '@socket.io/admin-ui';
 import dayjs from 'dayjs';
 
 const PORT = 3001;
@@ -15,13 +15,16 @@ const event = {
   msg: 'msg',
 };
 
-const app = express();
-const httpServer = http.createServer(app);
-const io = SocketIO(httpServer, {
+const httpServer = createServer();
+const io = new Server(httpServer, {
   cors: {
     origin: '*',
     credentials: true,
   },
+});
+
+instrument(io, {
+  auth: false,
 });
 
 const rooms = new Map();
