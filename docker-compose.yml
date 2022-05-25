@@ -1,0 +1,9 @@
+version: "3.0"
+services:
+  chat_db:
+    container_name: letters_chat_db
+    build: ./docker
+    ports:
+      - "${DB_PORT}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}

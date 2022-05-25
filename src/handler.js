@@ -1,7 +1,14 @@
 import dayjs from 'dayjs';
 // local
-import { users, verifyToken } from './db/user';
-import { rooms, joinRoom, leaveRoom, getMembers, checkMember } from './db/room';
+import { users, verifyToken } from './memory/user';
+import {
+  rooms,
+  joinRoom,
+  leaveRoom,
+  getMembers,
+  checkMember,
+} from './memory/room';
+import { poolPromise } from './db/connect';
 
 const timeFormat = 'YYYY-MM-DD hh:mm';
 const event = {
