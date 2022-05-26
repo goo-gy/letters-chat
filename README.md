@@ -20,12 +20,24 @@ DB_password=[]
 
 --- 
 
-## DB 설치 및 초기화
+## 개발환경 Init
+
+``` shell
+npm run env:init
+```
+
+- MySQL
+  설치 및 Database 생성
+- Kafka
+  - zookeeper
+  - 
+
+
+## DB Scheme 생성
 
 - Docker 설치 후
 
 ```shell
-npm run db:init
 npm run db:migrate
 ```
 
