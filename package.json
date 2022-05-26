@@ -7,7 +7,8 @@
     "start": "nodemon",
     "db:init": "docker-compose up -d --build",
     "db:migrate": "babel-node migration.js up",
-    "db:rollback": "babel-node migration.js down"
+    "db:rollback": "babel-node migration.js down",
+    "db:test" : "babel-node ./src/db/test.js"
   },
   "repository": {
     "type": "git",
