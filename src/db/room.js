@@ -36,10 +36,11 @@ async function leaveRoom({ room_id, user_id }) {
 
 async function getRoomMembers({ room_id }) {
   try {
-    const QUERY_GET_MEMBER = `SELECT * FROM room_has_user WHERE room_id='${room_id}'`;
+    const QUERY_GET_MEMBER = `SELECT user.id as id, user.email as email, user.name as name FROM room_has_user JOIN user ON room_id='${room_id}' AND user_id=user.id`;
     const [rows, fields] = await poolPromise.query(QUERY_GET_MEMBER);
     return { success: true, data: rows };
   } catch (error) {
+    console.log(error);
     return { success: false, error_code: error.code };
   }
 }

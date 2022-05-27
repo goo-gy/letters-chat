@@ -4,11 +4,11 @@
   "description": "Letters chat",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon",
+    "start": "docker-compose start && nodemon",
     "env:init": "docker-compose up -d --build",
     "db:migrate": "babel-node migration.js up",
     "db:rollback": "babel-node migration.js down",
-    "db:test" : "babel-node ./src/db/test.js"
+    "db:test": "babel-node ./src/db/test.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
     "jsonwebtoken": "^8.5.1",
     "mysql-migrations": "^1.0.7",
     "mysql2": "^2.3.3",
+    "node-rdkafka": "^2.13.0",
     "nodemon": "^2.0.15",
     "socket.io": "^4.4.1"
   },

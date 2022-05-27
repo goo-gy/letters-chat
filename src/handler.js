@@ -1,81 +1,91 @@
 import dayjs from 'dayjs';
 // local
-import { users, verifyToken } from './memory/user';
-import {
-  rooms,
-  joinRoom,
-  leaveRoom,
-  getMembers,
-  checkMember,
-} from './memory/room';
-import { poolPromise } from './db/connect';
+import event from './event';
+import { verifyToken } from './JWT';
+import { pushJoin, pushLeave, pushMessage } from './kafka/producer';
+import { registerUser } from './db/user';
+import { getRoomMembers } from './db/room';
+import { getChatList } from './db/chat';
 
 const timeFormat = 'YYYY-MM-DD hh:mm';
-const event = {
-  auth: 'auth',
-  connection: 'connection',
-  disconnect: 'disconnect',
-  disconnecting: 'disconnecting',
-  joinRoom: 'join_room',
-  leaveRoom: 'leave_room',
-  msg: 'msg',
-};
 
 function setEventHandler(io) {
-  io.on(event.connection, (socket, data) => {
+  io.on(event.connection, (socket) => {
     socket.on(event.auth, ({ token }, done) => {
-      const user = verifyToken(token);
-      if (user.error) {
-        return;
+      try {
+        const user = verifyToken(token);
+        if (user.error) {
+          return;
+        }
+        socket['token'] = token;
+        registerUser(user);
+        done();
+      } catch (error) {
+        console.log('socket-auth', error);
       }
-      socket['userId'] = user.id;
-      users.set(user.id, { ...user });
-      done();
     });
 
-    socket.on(event.joinRoom, ({ roomName }, done) => {
-      const time = dayjs().format(timeFormat);
-      const user = users.get(socket['userId']);
-      if (!user) {
-        return;
-      }
-      socket.join(roomName);
-      if (!checkMember({ roomName, user })) {
-        socket.to(roomName).emit(event.joinRoom, { user, time });
-      }
-      joinRoom({ roomName, user });
-      const people = getMembers({ roomName });
-      done({ people, user, time });
-    });
-
-    socket.on(event.msg, ({ roomName, msg }, done) => {
-      const time = dayjs().format(timeFormat);
-      const user = users.get(socket['userId']);
-      if (msg) {
-        socket.to(roomName).emit(event.msg, {
-          user,
-          msg,
+    socket.on(event.joinRoom, async ({ room_id }, done) => {
+      try {
+        const token = socket['token'];
+        const time = dayjs().format(timeFormat);
+        const result = await pushJoin({
+          room_id,
+          token,
           time,
         });
-        done({ user, time });
+        if (result.success) {
+          socket.join(room_id);
+          // front
+          const { success, data } = await getRoomMembers({ room_id });
+          done({ people: data });
+        }
+      } catch (error) {
+        console.log('socket-joinRoom', error);
       }
     });
 
-    socket.on(event.leaveRoom, ({ roomName }) => {
-      const time = dayjs().format(timeFormat);
-      const user = users.get(socket['userId']);
-      socket.leave(roomName);
-      leaveRoom({ roomName, user });
-      socket.to(roomName).emit(event.leaveRoom, { user, time });
+    socket.on(event.message, async ({ room_id, message }, messageDone) => {
+      try {
+        if (message) {
+          const token = socket['token'];
+          const time = dayjs().format(timeFormat);
+          const { success } = await pushMessage({
+            room_id,
+            token,
+            message,
+            time,
+          });
+          if (success) {
+            messageDone();
+          }
+        }
+      } catch (error) {
+        console.log('socket-message', error);
+      }
     });
 
-    socket.on(event.disconnecting, () => {
-      const time = dayjs().format(timeFormat);
-      const user = users.get(socket['userId']);
-      socket.rooms.forEach((roomName) => {
-        leaveRoom({ roomName, user });
-        socket.to(roomName).emit(event.leaveRoom, { user, time });
-      });
+    socket.on(event.leaveRoom, async ({ room_id }) => {
+      try {
+        const token = socket['token'];
+        const time = dayjs().format(timeFormat);
+        const result = await pushLeave({ room_id, token, time });
+        socket.leave(room_id);
+      } catch (error) {
+        console.log('socket-leaveRoom', error);
+      }
+    });
+
+    socket.on(event.disconnecting, async () => {
+      try {
+        const time = dayjs().format(timeFormat);
+        const token = socket['token'];
+        socket.rooms.forEach((room_id) => {
+          pushLeave({ room_id, token, time });
+        });
+      } catch (error) {
+        console.log('socket-disconnecting', error);
+      }
     });
 
     socket.on(event.disconnect, () => {});
