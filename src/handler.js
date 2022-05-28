@@ -38,7 +38,8 @@ function setEventHandler(io) {
           socket.join(room_id);
           // front
           const { success, data } = await getRoomMembers({ room_id });
-          done({ people: data });
+          const chatResult = await getChatList({ room_id }); // check auth
+          done({ people: data, chatList: chatResult.data });
         }
       } catch (error) {
         console.log('socket-joinRoom', error);

@@ -56,7 +56,12 @@ function setKafkaConsumer(io) {
             console.log('chat', { room_id, token, message, time });
 
             saveChat({ room_id, user_id: user.id, message, time });
-            io.in(room_id).emit(event.message, { user, message, time });
+            io.in(room_id).emit(event.message, {
+              user_id: user.id,
+              user_name: user.name,
+              message,
+              time,
+            });
           } catch (error) {
             console.log('kafka-consumer-message', error);
           }
