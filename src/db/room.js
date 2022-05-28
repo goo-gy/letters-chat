@@ -45,4 +45,17 @@ async function getRoomMembers({ room_id }) {
   }
 }
 
-export { createRoom, joinRoom, leaveRoom, getRoomMembers };
+async function checkRoomMembers({ room_id, user_id }) {
+  try {
+    const QUERY_CHECK_MEMBER = `SELECT user_id FROM room_has_user WHERE room_id='${room_id}' AND user_id=${user_id}`;
+    const [rows, fields] = await poolPromise.query(QUERY_CHECK_MEMBER);
+    const hasMember = rows.length > 0;
+    console.log(rows, hasMember);
+    return { success: true, data: hasMember };
+  } catch (error) {
+    console.log(error);
+    return { success: false, error_code: error.code };
+  }
+}
+
+export { createRoom, joinRoom, leaveRoom, getRoomMembers, checkRoomMembers };

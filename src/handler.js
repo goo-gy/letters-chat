@@ -4,7 +4,7 @@ import event from './event';
 import { verifyToken } from './JWT';
 import { pushJoin, pushLeave, pushMessage } from './kafka/producer';
 import { registerUser } from './db/user';
-import { getRoomMembers } from './db/room';
+import { getRoomMembers, checkRoomMembers } from './db/room';
 import { getChatList } from './db/chat';
 
 const timeFormat = 'YYYY-MM-DD hh:mm';
@@ -29,17 +29,26 @@ function setEventHandler(io) {
       try {
         const token = socket['token'];
         const time = dayjs().format(timeFormat);
-        const result = await pushJoin({
+        const user = verifyToken(token);
+        // TODO : token 재발급
+        if (!user) return;
+        const { success, data } = await checkRoomMembers({
           room_id,
-          token,
-          time,
+          user_id: user.id,
         });
-        if (result.success) {
-          socket.join(room_id);
-          // front
-          const { success, data } = await getRoomMembers({ room_id });
-          const chatResult = await getChatList({ room_id }); // check auth
-          done({ people: data, chatList: chatResult.data });
+        if (success && !data) {
+          pushJoin({
+            room_id,
+            token,
+            time,
+          });
+        }
+        socket.join(room_id);
+        // front
+        const membersResult = await getRoomMembers({ room_id });
+        const chatResult = await getChatList({ room_id });
+        if (membersResult.success && chatResult.success) {
+          done({ people: membersResult.data, chatList: chatResult.data });
         }
       } catch (error) {
         console.log('socket-joinRoom', error);
