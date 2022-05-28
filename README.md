@@ -1,8 +1,4 @@
 # Letters-Chat
-Letter Chatting Server
-
-
-# letters-graphQL
 
 ## env 설정
 
@@ -30,8 +26,9 @@ npm run env:init
   설치 및 Database 생성
 - Kafka
   - zookeeper
-  - 
+  - broker
 
+---
 
 ## DB Scheme 생성
 
@@ -45,4 +42,20 @@ npm run db:migrate
 ### migration 추가
 ``` shell
 npx babel-node migration.js add migration [migration name]
+```
+
+---
+
+## 실행
+
+### 채팅 서버 실행
+
+``` shell
+npm run start
+```
+
+### DB Writer 실행
+
+``` shell
+npm run writer:start
 ```
