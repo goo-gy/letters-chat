@@ -88,11 +88,11 @@ function setEventHandler(io) {
 
     socket.on(event.disconnecting, async () => {
       try {
-        const time = dayjs().format(timeFormat);
-        const token = socket['token'];
-        socket.rooms.forEach((room_id) => {
-          pushLeave({ room_id, token, time });
-        });
+        // const time = dayjs().format(timeFormat);
+        // const token = socket['token'];
+        // socket.rooms.forEach((room_id) => {
+        //   pushLeave({ room_id, token, time });
+        // });
       } catch (error) {
         console.log('socket-disconnecting', error);
       }
