@@ -4,7 +4,7 @@ import event from './event';
 import { verifyToken } from './JWT';
 import { pushJoin, pushLeave, pushMessage } from './kafka/producer';
 import { registerUser } from './db/user';
-import { getRoomMembers, checkRoomMembers } from './db/room';
+import { checkRoom, getRoomMembers, checkRoomMembers } from './db/room';
 import { getChatList } from './db/chat';
 
 const timeFormat = 'YYYY-MM-DD hh:mm';
@@ -30,8 +30,18 @@ function setEventHandler(io) {
         const token = socket['token'];
         const time = dayjs().format(timeFormat);
         const user = verifyToken(token);
-        // TODO : token 재발급
-        if (!user) return;
+        console.log(user);
+        if (!user) {
+          // TODO : token 재발급
+          done({ success: false, error_msg: '로그인이 필요합니다.' });
+          return;
+        }
+        const resultRoom = await checkRoom({ room_id });
+        if (!resultRoom.data) {
+          done({ success: false, error_msg: '채팅방이 존재하지 않습니다.' });
+          return;
+        }
+
         const { success, data } = await checkRoomMembers({
           room_id,
           user_id: user.id,
@@ -48,7 +58,11 @@ function setEventHandler(io) {
         const membersResult = await getRoomMembers({ room_id });
         const chatResult = await getChatList({ room_id });
         if (membersResult.success && chatResult.success) {
-          done({ people: membersResult.data, chatList: chatResult.data });
+          done({
+            success: true,
+            people: membersResult.data,
+            chatList: chatResult.data,
+          });
         }
       } catch (error) {
         console.log('socket-joinRoom', error);
