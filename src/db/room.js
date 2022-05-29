@@ -13,6 +13,20 @@ async function createRoom({ room_id, room_name }) {
   }
 }
 
+async function checkRoom({ room_id }) {
+  try {
+    const QUERY_CREATE_ROOM = `SELECT id FROM room WHERE id='${room_id}'`;
+    const [rows, fields] = await poolPromise.query(QUERY_CREATE_ROOM);
+    if (rows.length > 0) {
+      return { success: true, data: true };
+    } else {
+      return { success: true, data: false };
+    }
+  } catch (error) {
+    return { success: false, error_code: error.code };
+  }
+}
+
 async function joinRoom({ room_id, user_id }) {
   // TODO : Check room exist
   try {
@@ -36,12 +50,32 @@ async function leaveRoom({ room_id, user_id }) {
 
 async function getRoomMembers({ room_id }) {
   try {
-    const QUERY_GET_MEMBER = `SELECT * FROM room_has_user WHERE room_id='${room_id}'`;
+    const QUERY_GET_MEMBER = `SELECT user.id as id, user.email as email, user.name as name FROM room_has_user JOIN user ON room_id='${room_id}' AND user_id=user.id`;
     const [rows, fields] = await poolPromise.query(QUERY_GET_MEMBER);
     return { success: true, data: rows };
   } catch (error) {
+    console.log(error);
     return { success: false, error_code: error.code };
   }
 }
 
-export { createRoom, joinRoom, leaveRoom, getRoomMembers };
+async function checkRoomMembers({ room_id, user_id }) {
+  try {
+    const QUERY_CHECK_MEMBER = `SELECT user_id FROM room_has_user WHERE room_id='${room_id}' AND user_id=${user_id}`;
+    const [rows, fields] = await poolPromise.query(QUERY_CHECK_MEMBER);
+    const hasMember = rows.length > 0;
+    return { success: true, data: hasMember };
+  } catch (error) {
+    console.log(error);
+    return { success: false, error_code: error.code };
+  }
+}
+
+export {
+  createRoom,
+  checkRoom,
+  joinRoom,
+  leaveRoom,
+  getRoomMembers,
+  checkRoomMembers,
+};

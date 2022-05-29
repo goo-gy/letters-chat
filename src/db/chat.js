@@ -17,7 +17,8 @@ const saveChat = async (chat) => {
 const getChatList = async ({ room_id }) => {
   try {
     // let QUERY_GET_CHAT = `SELECT id, user_id, message, DATE_FORMAT(time, '${timeFormatSQL}') AS time FROM chat`;
-    let QUERY_GET_CHAT = `SELECT chat.id, user_id, user.name as user_name, message, DATE_FORMAT(time, '${timeFormatSQL}') AS time FROM chat JOIN user ON user_id=user.id AND room_id='${room_id}' order by chat.id`;
+    // TODO : make pageable
+    let QUERY_GET_CHAT = `SELECT * FROM (SELECT chat.id, user_id, user.name as user_name, message, DATE_FORMAT(time, '${timeFormatSQL}') AS time FROM chat JOIN user ON user_id=user.id AND room_id='${room_id}' order by chat.id DESC LIMIT 50) sub ORDER BY id ASC`;
     const [rows, fields] = await poolPromise.query(QUERY_GET_CHAT);
     return { success: true, data: rows };
   } catch (error) {
