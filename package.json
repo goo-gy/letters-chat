@@ -4,7 +4,12 @@
   "description": "Letters chat",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "docker-compose start && nodemon",
+    "writer:start": "babel-node src/kafka/dbWriter.js",
+    "env:init": "docker-compose up -d --build",
+    "db:migrate": "babel-node migration.js up",
+    "db:rollback": "babel-node migration.js down",
+    "db:test": "babel-node ./src/db/test.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +20,23 @@
   "bugs": {
     "url": "https://github.com/goo-gy/Letters-Chat/issues"
   },
-  "homepage": "https://github.com/goo-gy/Letters-Chat#readme"
+  "homepage": "https://github.com/goo-gy/Letters-Chat#readme",
+  "dependencies": {
+    "@socket.io/admin-ui": "^0.2.0",
+    "dayjs": "^1.11.0",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "mysql-migrations": "^1.0.7",
+    "mysql2": "^2.3.3",
+    "node-rdkafka": "^2.13.0",
+    "nodemon": "^2.0.15",
+    "socket.io": "^4.4.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-node": "^0.0.1-security",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-3": "^6.24.1"
+  }
 }
