@@ -1,5 +1,11 @@
 version: "3.0"
 services:
+  server:
+    container_name: letters_chat
+    build: .
+    ports:
+      - "3001:3001"
+
   chat_db:
     container_name: letters_chat_db
     build: ./docker
