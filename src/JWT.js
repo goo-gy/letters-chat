@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 const users = new Map();
 
 dotenv.config();
-const secretKey = process.env.SECRET_KEY;
+const secretKey = process.env.JWT_SECRET_KEY;
 
 users.set(0, {
   name: 'admin',
