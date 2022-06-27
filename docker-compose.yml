@@ -4,7 +4,7 @@ services:
     container_name: letters_chat
     build: .
     ports:
-      - "3001:3001"
+      - "${SERVICE_PORT}:${SERVICE_PORT}"
 
   chat_db:
     container_name: letters_chat_db

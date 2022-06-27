@@ -1,11 +1,13 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';
+import dotenv from 'dotenv';
 // local
 import setEventHandler from './handler';
 import setKafkaConsumer from './kafka/consumer';
 
-const PORT = 3001;
+dotenv.config();
+const { SERVICE_PORT } = process.env;
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -20,5 +22,5 @@ instrument(io, {
 setEventHandler(io);
 setKafkaConsumer(io);
 
-const handleListen = () => console.log(`Listening on ${PORT}`);
-httpServer.listen(PORT, handleListen);
+const handleListen = () => console.log(`Listening on ${SERVICE_PORT}`);
+httpServer.listen(SERVICE_PORT, handleListen);

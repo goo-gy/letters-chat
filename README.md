@@ -3,6 +3,7 @@
 ## env 설정
 
 ```
+SERVICE_PORT=[]
 JWT_SECRET_KEY=[]
 API_URL=[]
 DB_HOST=[]
